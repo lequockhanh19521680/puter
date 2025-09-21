@@ -27,6 +27,7 @@ const auth = require('../../middleware/auth');
  */
 class CanvasService extends BaseService {
     async _construct() {
+        console.log('CanvasService: Starting construction...');
         // Canvas configuration
         this.CANVAS_WIDTH = 1000;
         this.CANVAS_HEIGHT = 1000;
@@ -38,9 +39,11 @@ class CanvasService extends BaseService {
         
         // Track active users
         this.activeUsers = new Map();
+        console.log('CanvasService: Construction completed');
     }
 
     async _init() {
+        console.log('CanvasService: Starting initialization...');
         // Initialize canvas with default background
         this.initializeCanvas();
         
@@ -49,6 +52,7 @@ class CanvasService extends BaseService {
         
         // Set up real-time socket handlers
         this.setupSocketHandlers();
+        console.log('CanvasService: Initialization completed');
     }
 
     /**

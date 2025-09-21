@@ -111,7 +111,6 @@ const main = async () => {
     k.add_module(new PuterAIModule());
     k.add_module(new InternetModule());
     k.add_module(new DNSModule());
-    k.add_module(new ChronoCanvasModule());
     if ( process.env.UNSAFE_PUTER_DEV ) {
         k.add_module(new DevelopmentModule());
     }

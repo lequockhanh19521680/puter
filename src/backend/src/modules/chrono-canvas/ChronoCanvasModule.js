@@ -26,11 +26,13 @@ const { AdvancedBase } = require("@heyputer/putility");
  */
 class ChronoCanvasModule extends AdvancedBase {
     async install (context) {
+        console.log('ChronoCanvasModule: Installing module...');
         const services = context.get('services');
 
         // Register the main canvas service
         const { CanvasService } = require('./CanvasService.js');
         services.registerService('chrono-canvas', CanvasService);
+        console.log('ChronoCanvasModule: CanvasService registered');
     }
 }
 

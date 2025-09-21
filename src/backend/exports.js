@@ -69,6 +69,7 @@ module.exports = {
         CaptchaModule,
         EntityStoreModule,
         KVStoreModule,
+        ChronoCanvasModule,
     ],
     
     // Pre-built modules
