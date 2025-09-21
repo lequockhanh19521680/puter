@@ -43,6 +43,7 @@ const { KVStoreModule } = require("./src/modules/kvstore/KVStoreModule.js");
 const { DomainModule } = require("./src/modules/domain/DomainModule.js");
 const { DNSModule } = require("./src/modules/dns/DNSModule.js");
 const { TestConfigModule } = require("./src/modules/test-config/TestConfigModule.js");
+const ChronoCanvasModule = require("./src/modules/chrono-canvas/ChronoCanvasModule.js");
 
 module.exports = {
     helloworld: () => {
@@ -86,6 +87,7 @@ module.exports = {
     KVStoreModule,
     DNSModule,
     DomainModule,
+    ChronoCanvasModule,
     
     // Development modules
     PerfMonModule,

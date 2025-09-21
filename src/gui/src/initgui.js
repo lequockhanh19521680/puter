@@ -23,6 +23,7 @@ import UIWindow from './UI/UIWindow.js'
 import UIAlert from './UI/UIAlert.js'
 import UIWindowLogin from './UI/UIWindowLogin.js';
 import UIWindowSignup from './UI/UIWindowSignup.js';
+import UIWindowChronoCanvas from './UI/UIWindowChronoCanvas.js';
 import path from "./lib/path.js";
 import UIWindowSaveAccount from './UI/UIWindowSaveAccount.js';
 import UIWindowNewPassword from './UI/UIWindowNewPassword.js';
@@ -1689,6 +1690,11 @@ $(document).on('contextmenu', '.disable-context-menu', function(e){
 
 // util/desktop.js
 window.privacy_aware_path = privacy_aware_path({ window });
+
+// Chrono-Canvas launcher function
+window.launchChronoCanvas = function() {
+    UIWindowChronoCanvas();
+};
 
 $(window).on('system-logout-event', function(){
     // Clear cookie
