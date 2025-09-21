@@ -33,6 +33,46 @@ class ChronoCanvasModule extends AdvancedBase {
         const { CanvasService } = require('./CanvasService.js');
         services.registerService('chrono-canvas', CanvasService);
         console.log('ChronoCanvasModule: CanvasService registered');
+
+        // Register test API routes directly
+        this.registerTestAPI(context);
+    }
+
+    registerTestAPI(context) {
+        try {
+            console.log('ChronoCanvasModule: Registering test API...');
+            const services = context.get('services');
+            
+            // Try to get the web service and register routes directly
+            process.nextTick(() => {
+                try {
+                    const webService = services.get('web-server');
+                    if (webService && webService.app) {
+                        const testRouter = require('./TestAPI.js');
+                        webService.app.use('/api', testRouter);
+                        console.log('ChronoCanvasModule: Test API routes registered successfully');
+                    } else {
+                        console.log('ChronoCanvasModule: Web service not ready, will retry...');
+                        
+                        // Retry after a delay
+                        setTimeout(() => {
+                            const webService2 = services.get('web-server');
+                            if (webService2 && webService2.app) {
+                                const testRouter = require('./TestAPI.js');
+                                webService2.app.use('/api', testRouter);
+                                console.log('ChronoCanvasModule: Test API routes registered on retry');
+                            } else {
+                                console.log('ChronoCanvasModule: Web service still not available');
+                            }
+                        }, 5000);
+                    }
+                } catch (error) {
+                    console.error('ChronoCanvasModule: Error registering test API:', error);
+                }
+            });
+        } catch (error) {
+            console.error('ChronoCanvasModule: Error in registerTestAPI:', error);
+        }
     }
 }
 

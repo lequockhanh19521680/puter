@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chrono-Canvas - Collaborative Pixel Art Game</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Arial', sans-serif;
+            background: #1a1a1a;
+            color: white;
+            overflow: hidden;
+        }
+        
+        .chrono-canvas-container {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background: #2a2a2a;
+        }
+        
+        .chrono-canvas-toolbar {
+            height: 60px;
+            background: #3a3a3a;
+            border-bottom: 2px solid #555;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .toolbar-section {
+            margin-right: 30px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .toolbar-label {
+            color: #ccc;
+            margin-right: 10px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        
+        .color-picker {
+            width: 50px;
+            height: 40px;
+            border: 2px solid #666;
+            border-radius: 4px;
+            cursor: pointer;
+            background: none;
+        }
+        
+        .toolbar-button {
+            background: #4a4a4a;
+            color: white;
+            border: 1px solid #666;
+            padding: 8px 16px;
+            margin-right: 8px;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 12px;
+            transition: background 0.2s;
+        }
+        
+        .toolbar-button:hover {
+            background: #5a5a5a;
+        }
+        
+        .toolbar-button:active {
+            background: #6a6a6a;
+        }
+        
+        .info-display {
+            color: #aaa;
+            font-size: 12px;
+            margin-left: auto;
+        }
+        
+        .chrono-canvas-content {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            background: #1a1a1a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .chrono-canvas-main {
+            cursor: crosshair;
+            image-rendering: pixelated;
+            border: 2px solid #444;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
+        
+        .title {
+            position: absolute;
+            top: 10px;
+            left: 20px;
+            font-size: 18px;
+            font-weight: bold;
+            color: #4CAF50;
+            text-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
+        }
+        
+        .instructions {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            font-size: 12px;
+            color: #888;
+            line-height: 1.4;
+        }
+        
+        .demo-badge {
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            background: #FF5722;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="chrono-canvas-container">
+        <div class="chrono-canvas-toolbar">
+            <div class="title">Chrono-Canvas</div>
+            
+            <div class="toolbar-section">
+                <span class="toolbar-label">Color:</span>
+                <input type="color" class="color-picker" value="#FF5722" title="Choose your brush color">
+            </div>
+            
+            <div class="toolbar-section">
+                <button class="toolbar-button zoom-in" title="Zoom In">Zoom In</button>
+                <button class="toolbar-button zoom-out" title="Zoom Out">Zoom Out</button>
+                <button class="toolbar-button reset-view" title="Reset View">Reset View</button>
+            </div>
+            
+            <div class="toolbar-section">
+                <button class="toolbar-button clear-canvas" title="Clear Canvas">Clear Canvas</button>
+            </div>
+            
+            <div class="info-display">
+                <div>
+                    <span class="connected-users">Demo Mode</span> | 
+                    <span class="cursor-position">Position: (0, 0)</span> | 
+                    <span class="pixel-count">Pixels: 0</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="chrono-canvas-content">
+            <div class="demo-badge">MVP v0.1 Demo</div>
+            
+            <canvas class="chrono-canvas-main" width="800" height="600"></canvas>
+            
+            <div class="instructions">
+                <strong>Instructions:</strong><br>
+                • Left click to place pixels<br>
+                • Right click + drag to pan<br>
+                • Mouse wheel to zoom<br>
+                • Choose colors from the toolbar<br>
+                • This is a foundational demo of the real-time collaborative pixel art game
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class ChronoCanvasDemo {
+            constructor() {
+                this.canvas = document.querySelector('.chrono-canvas-main');
+                this.ctx = this.canvas.getContext('2d');
+                this.pixelSize = 8;
+                this.scale = 1;
+                this.offsetX = 0;
+                this.offsetY = 0;
+                this.currentColor = '#FF5722';
+                this.isDrawing = false;
+                this.isDragging = false;
+                this.lastMouseX = 0;
+                this.lastMouseY = 0;
+                this.pixelData = new Map();
+                this.pixelCount = 0;
+                
+                this.init();
+            }
+            
+            init() {
+                this.setupCanvas();
+                this.setupEventListeners();
+                this.setupToolbar();
+                this.drawGrid();
+                this.drawWelcomeMessage();
+            }
+            
+            setupCanvas() {
+                this.ctx.imageSmoothingEnabled = false;
+                this.resetView();
+            }
+            
+            setupEventListeners() {
+                // Mouse events
+                this.canvas.addEventListener('mousedown', (e) => this.handleMouseDown(e));
+                this.canvas.addEventListener('mousemove', (e) => this.handleMouseMove(e));
+                this.canvas.addEventListener('mouseup', () => this.handleMouseUp());
+                this.canvas.addEventListener('mouseleave', () => this.handleMouseUp());
+                this.canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+                this.canvas.addEventListener('wheel', (e) => this.handleWheel(e));
+                
+                // Window resize
+                window.addEventListener('resize', () => this.handleResize());
+            }
+            
+            setupToolbar() {
+                const colorPicker = document.querySelector('.color-picker');
+                const zoomInBtn = document.querySelector('.zoom-in');
+                const zoomOutBtn = document.querySelector('.zoom-out');
+                const resetViewBtn = document.querySelector('.reset-view');
+                const clearCanvasBtn = document.querySelector('.clear-canvas');
+                
+                colorPicker.addEventListener('change', (e) => {
+                    this.currentColor = e.target.value;
+                });
+                
+                zoomInBtn.addEventListener('click', () => this.zoomIn());
+                zoomOutBtn.addEventListener('click', () => this.zoomOut());
+                resetViewBtn.addEventListener('click', () => this.resetView());
+                clearCanvasBtn.addEventListener('click', () => this.clearCanvas());
+            }
+            
+            handleMouseDown(e) {
+                const rect = this.canvas.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                
+                this.lastMouseX = x;
+                this.lastMouseY = y;
+                
+                if (e.button === 0) { // Left click
+                    this.isDrawing = true;
+                    this.placePixel(x, y);
+                } else if (e.button === 2) { // Right click
+                    this.isDragging = true;
+                    this.canvas.style.cursor = 'grabbing';
+                }
+            }
+            
+            handleMouseMove(e) {
+                const rect = this.canvas.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                
+                // Update cursor position
+                const gridX = Math.floor((x - this.offsetX) / (this.pixelSize * this.scale));
+                const gridY = Math.floor((y - this.offsetY) / (this.pixelSize * this.scale));
+                document.querySelector('.cursor-position').textContent = `Position: (${gridX}, ${gridY})`;
+                
+                if (this.isDrawing) {
+                    this.placePixel(x, y);
+                } else if (this.isDragging) {
+                    const deltaX = x - this.lastMouseX;
+                    const deltaY = y - this.lastMouseY;
+                    this.offsetX += deltaX;
+                    this.offsetY += deltaY;
+                    this.redraw();
+                }
+                
+                this.lastMouseX = x;
+                this.lastMouseY = y;
+            }
+            
+            handleMouseUp() {
+                this.isDrawing = false;
+                this.isDragging = false;
+                this.canvas.style.cursor = 'crosshair';
+            }
+            
+            handleWheel(e) {
+                e.preventDefault();
+                const rect = this.canvas.getBoundingClientRect();
+                const mouseX = e.clientX - rect.left;
+                const mouseY = e.clientY - rect.top;
+                
+                const wheel = e.deltaY < 0 ? 1 : -1;
+                const zoom = Math.exp(wheel * 0.1);
+                const newScale = Math.max(0.5, Math.min(8, this.scale * zoom));
+                
+                if (newScale !== this.scale) {
+                    this.offsetX = mouseX - (mouseX - this.offsetX) * (newScale / this.scale);
+                    this.offsetY = mouseY - (mouseY - this.offsetY) * (newScale / this.scale);
+                    this.scale = newScale;
+                    this.redraw();
+                }
+            }
+            
+            handleResize() {
+                // Handle window resize if needed
+                this.redraw();
+            }
+            
+            placePixel(screenX, screenY) {
+                const gridX = Math.floor((screenX - this.offsetX) / (this.pixelSize * this.scale));
+                const gridY = Math.floor((screenY - this.offsetY) / (this.pixelSize * this.scale));
+                
+                // Check bounds
+                const maxGridX = Math.floor(this.canvas.width / this.pixelSize);
+                const maxGridY = Math.floor(this.canvas.height / this.pixelSize);
+                
+                if (gridX >= 0 && gridX < maxGridX && gridY >= 0 && gridY < maxGridY) {
+                    const key = `${gridX},${gridY}`;
+                    if (!this.pixelData.has(key)) {
+                        this.pixelCount++;
+                        document.querySelector('.pixel-count').textContent = `Pixels: ${this.pixelCount}`;
+                    }
+                    this.pixelData.set(key, {
+                        color: this.currentColor,
+                        timestamp: Date.now()
+                    });
+                    this.redraw();
+                }
+            }
+            
+            redraw() {
+                // Clear canvas
+                this.ctx.fillStyle = '#000000';
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+                
+                // Draw grid
+                this.drawGrid();
+                
+                // Draw pixels
+                for (const [key, pixel] of this.pixelData.entries()) {
+                    const [x, y] = key.split(',').map(Number);
+                    const screenX = x * this.pixelSize * this.scale + this.offsetX;
+                    const screenY = y * this.pixelSize * this.scale + this.offsetY;
+                    const size = this.pixelSize * this.scale;
+                    
+                    if (screenX + size >= 0 && screenX < this.canvas.width &&
+                        screenY + size >= 0 && screenY < this.canvas.height) {
+                        this.ctx.fillStyle = pixel.color;
+                        this.ctx.fillRect(screenX, screenY, size, size);
+                    }
+                }
+            }
+            
+            drawGrid() {
+                if (this.scale < 2) return;
+                
+                this.ctx.strokeStyle = '#333';
+                this.ctx.lineWidth = 0.5;
+                
+                const pixelSizeScaled = this.pixelSize * this.scale;
+                const startX = -this.offsetX % pixelSizeScaled;
+                const startY = -this.offsetY % pixelSizeScaled;
+                
+                // Vertical lines
+                for (let x = startX; x < this.canvas.width; x += pixelSizeScaled) {
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(x, 0);
+                    this.ctx.lineTo(x, this.canvas.height);
+                    this.ctx.stroke();
+                }
+                
+                // Horizontal lines
+                for (let y = startY; y < this.canvas.height; y += pixelSizeScaled) {
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(0, y);
+                    this.ctx.lineTo(this.canvas.width, y);
+                    this.ctx.stroke();
+                }
+            }
+            
+            drawWelcomeMessage() {
+                this.ctx.fillStyle = '#4CAF50';
+                this.ctx.font = '16px Arial';
+                this.ctx.textAlign = 'center';
+                this.ctx.fillText('Welcome to Chrono-Canvas!', this.canvas.width / 2, this.canvas.height / 2 - 20);
+                
+                this.ctx.fillStyle = '#FFC107';
+                this.ctx.font = '12px Arial';
+                this.ctx.fillText('Start creating pixel art by clicking on the canvas', this.canvas.width / 2, this.canvas.height / 2 + 10);
+            }
+            
+            zoomIn() {
+                this.scale = Math.min(8, this.scale * 1.5);
+                this.redraw();
+            }
+            
+            zoomOut() {
+                this.scale = Math.max(0.5, this.scale / 1.5);
+                this.redraw();
+            }
+            
+            resetView() {
+                this.scale = 1;
+                this.offsetX = 0;
+                this.offsetY = 0;
+                this.redraw();
+            }
+            
+            clearCanvas() {
+                if (confirm('Are you sure you want to clear the canvas?')) {
+                    this.pixelData.clear();
+                    this.pixelCount = 0;
+                    document.querySelector('.pixel-count').textContent = `Pixels: ${this.pixelCount}`;
+                    this.redraw();
+                    this.drawWelcomeMessage();
+                }
+            }
+        }
+        
+        // Initialize the demo when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new ChronoCanvasDemo();
+        });
+    </script>
+</body>
+</html>

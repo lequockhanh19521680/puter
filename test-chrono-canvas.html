@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chrono-Canvas Test</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #1a1a1a;
+            color: white;
+        }
+        .container {
+            width: 100vw;
+            height: 100vh;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Chrono-Canvas Test</h1>
+        <button onclick="testChronoCanvas()">Launch Chrono-Canvas</button>
+        <div id="chrono-canvas-container"></div>
+    </div>
+
+    <script>
+        // Load the ChronoCanvas class
+        const script = document.createElement('script');
+        script.src = '/src/apps/chrono-canvas/ChronoCanvas.js';
+        script.onload = function() {
+            console.log('ChronoCanvas script loaded');
+        };
+        document.head.appendChild(script);
+
+        function testChronoCanvas() {
+            console.log('Testing Chrono-Canvas...');
+            try {
+                const container = document.getElementById('chrono-canvas-container');
+                container.innerHTML = '';
+                
+                if (typeof ChronoCanvas !== 'undefined') {
+                    const game = new ChronoCanvas();
+                    container.appendChild(game.getElement());
+                    console.log('Chrono-Canvas launched successfully');
+                } else {
+                    console.error('ChronoCanvas class not found');
+                    container.innerHTML = '<p style="color: red;">ChronoCanvas class not found. Check the script loading.</p>';
+                }
+            } catch (error) {
+                console.error('Error launching Chrono-Canvas:', error);
+                document.getElementById('chrono-canvas-container').innerHTML = 
+                    '<p style="color: red;">Error: ' + error.message + '</p>';
+            }
+        }
+    </script>
+</body>
+</html>
